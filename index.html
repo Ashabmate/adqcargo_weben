@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Al Daqiq Cargo — Multi-Calculator</title>
+  <meta name="description" content="Al Daqiq Cargo Calculator: Express and Container shipping with multi-piece calculation." />
+  <style>
+    :root{
+      --bg:#0f172a;            /* slate-900 */
+      --card:#111827;          /* gray-900 */
+      --muted:#94a3b8;         /* slate-400 */
+      --text:#e5e7eb;          /* gray-200 */
+      --accent:#22c55e;        /* green-500 */
+      --accent-2:#10b981;      /* emerald-500 */
+      --danger:#f87171;        /* red-400 */
+      --warn:#f59e0b;          /* amber-500 */
+      --ring:#334155;          /* slate-700 */
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 1200px at 100% -10%, #0b1023 30%, var(--bg) 70%);
+      color:var(--text);
+    }
+    .wrap{max-width:1080px; margin:0 auto; padding:24px}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+    .brand{display:flex; align-items:center; gap:14px}
+    .logo{
+      width:54px; height:54px; border-radius:15px;
+      object-fit: contain;
+    }
+    h1{font-size:clamp(22px, 2.6vw, 34px); margin:0}
+    .tag{color:var(--muted); font-size:14px}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:22px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .grid{display:grid; grid-template-columns:1fr; gap:24px}
+    
+    @media(min-width:820px){ 
+      .grid{ 
+        grid-template-columns: 1fr 1fr; 
+        gap: 32px;
+      } 
+    }
+
+    label{display:block; font-size:13px; color:var(--muted); margin:0 0 6px}
+    select, input[type="number"], input[type="text"]{
+      width:100%; padding:12px 14px; border-radius:12px; background:#0b1224; color:var(--text);
+      border:1px solid var(--ring); outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    select:focus, input:focus{ border-color: var(--accent); box-shadow:0 0 0 3px rgba(34,197,94,.15); }
+    .row-2{display:grid; grid-template-columns:repeat(2, 1fr); gap:12px}
+
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .hint{font-size:12px; color:var(--muted)}
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: #0b1224;
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid var(--ring);
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--muted);
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+    }
+    .tab-btn.active {
+      background: var(--ring);
+      color: var(--text);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .tab-btn:hover:not(.active) {
+      color: var(--text);
+    }
+
+    /* Box Rows */
+    .box-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .box-row {
+        display: grid;
+        grid-template-columns: 30px 1.5fr 1fr 1fr 1fr;
+        gap: 8px;
+        align-items: center;
+        background: rgba(255,255,255,0.03);
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .box-num {
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+        font-weight: bold;
+    }
+    .box-header-row {
+        display: grid;
+        grid-template-columns: 30px 1.5fr 1fr 1fr 1fr;
+        gap: 8px;
+        padding: 0 8px;
+        margin-bottom: 4px;
+    }
+    .box-header-col {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+    }
+    .box-row input {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    /* Breakdown/Total */
+    .breakdown{background:#0b1224; border:1px dashed var(--ring); border-radius:14px; padding:14px}
+    .breakdown .item{display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:14px}
+    .breakdown .item strong{font-weight:600}
+    .line{height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); margin:8px 0}
+
+    .total{display:flex; align-items:baseline; gap:10px; margin-top:8px}
+    .total .big{
+      font-size:32px; 
+      font-weight:800;
+      transition: color .3s ease, transform .1s ease;
+      color: var(--text);
+    }
+    .total .big.highlight {
+      color: var(--accent);
+      transform: scale(1.03);
+    }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 16px; border-radius:12px; background:linear-gradient(90deg, var(--accent), var(--accent-2));
+      color:#04130a; font-weight:700; text-decoration:none; border:0; cursor:pointer;
+      box-shadow:0 10px 20px rgba(16,185,129,.25);
+      transition: transform .1s ease-in-out, background .2s, opacity .2s, box-shadow .2s;
+    }
+    .btn:hover:not(:disabled) {
+       transform: translateY(-2px);
+       filter: brightness(1.1);
+       box-shadow:0 12px 25px rgba(16,185,129,.35);
+    }
+    .btn:active{ transform: translateY(1px) }
+    .btn.secondary{ background:#0b1224; color:var(--text); box-shadow:none; border:1px solid var(--ring) }
+    .btn.secondary:hover:not(:disabled) {
+      background: var(--ring);
+      filter: none;
+      box-shadow: none;
+    }
+
+    .note{background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.3); color:#f8e3b0; padding:12px 14px; border-radius:12px; font-size:13px}
+    .danger{background:rgba(248,113,113,.09); border-color:rgba(248,113,113,.38); color:#fecaca}
+
+    footer{margin-top:24px; color:var(--muted); font-size:13px}
+    .kicker{font-size:13px; color:var(--muted)}
+    .caps{letter-spacing:.08em; text-transform:uppercase; font-size:12px; color:#9ca3af}
+
+    .brandmark{font-weight:800; background: linear-gradient(90deg, #e5e7eb, #a7f3d0); -webkit-background-clip:text; background-clip:text; color:transparent}
+    .copy{font-size:12px; color:var(--muted); margin-left:12px}
+    .faq-body{margin-top:8px; color:var(--muted); font-size:14px; line-height:1.55}
+    
+    details.accordion{background:#0b1224; border:1px solid var(--ring); border-radius:12px; padding:10px 12px; transition: border-color .2s, box-shadow .2s;}
+    details.accordion summary{cursor:pointer; list-style:none; font-weight:600; color:var(--text)}
+    details.accordion summary::-webkit-details-marker{display:none}
+    details.accordion summary::after{content:'+'; float:right; color:var(--muted)}
+    details.accordion[open] summary::after{content:'–'}
+    details.accordion[open]{border-color:var(--accent); box-shadow:0 0 0 3px rgba(34,197,94,.08)}
+    details.accordion:hover:not([open]){
+      border-color: var(--accent-2);
+    }
+
+    .widget {
+      background: #0b1224;
+      border: 1px solid var(--ring);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .widget:last-child {
+      margin-bottom: 0;
+    }
+    .widget-title {
+      text-transform: uppercase;
+      font-size: 12px;
+      color: #9ca3af;
+      letter-spacing: .08em;
+      margin-bottom: 14px;
+      display: block;
+    }
+    
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <img src="logo.png" alt="Al Daqiq Cargo" class="logo" onerror="this.style.display='none'">
+        <div>
+          <h1>Al Daqiq Cargo — Multi-Calculator</h1>
+          <div class="tag">Estimate shipping cost and book your charter slot</div>
+        </div>
+      </div>
+      <div class="kicker"><span class="caps">UAE</span> • rates in USD • preliminary calculation</div>
+    </header>
+
+    <main class="card">
+      <div class="grid">
+        <section>
+          
+          <div class="tabs">
+            <button type="button" class="tab-btn active" data-mode="express">EXPRESS</button>
+            <button type="button" class="tab-btn" data-mode="container">CONTAINER</button>
+          </div>
+
+          <div class="widget">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px">
+              <span class="widget-title" style="margin-bottom:0">Shipment Details</span>
+              <button class="btn secondary" id="resetBtn" type="button" style="padding: 8px 12px; font-size: 13px;">Reset</button>
+            </div>
+
+            <div id="productTypeRow" class="row-2" style="margin-bottom:12px; grid-template-columns: 1fr;">
+              <div>
+                <label for="item">Product Type</label>
+                <select id="item" aria-label="Product Type"></select>
+              </div>
+            </div>
+
+            <div style="margin-bottom:12px">
+                 <label for="boxCount">Number of packages (boxes / pallets)</label>
+                 <input id="boxCount" type="number" min="1" step="1" value="1">
+            </div>
+
+            <div>
+                <div class="box-header-row">
+                    <div>#</div>
+                    <div class="box-header-col">Weight (kg)</div>
+                    <div class="box-header-col">L (cm)</div>
+                    <div class="box-header-col">W (cm)</div>
+                    <div class="box-header-col">H (cm)</div>
+                </div>
+                <div id="boxesContainer" class="box-list">
+                    </div>
+            </div>
+
+          </div>
+          
+          <div class="widget">
+            <span class="widget-title">FAQ</span>
+            <div class="faq" style="margin-top:0"> 
+              <details class="accordion">
+                <summary>What is Express?</summary>
+                <div class="faq-body">Express line is a direct flight. Transit time 2–3 days. The rate depends on the type of goods. It is calculated based on the chargeable weight (the greater of volumetric vs. physical weight).</div>
+              </details>
+              <details class="accordion" style="margin-top:8px">
+                <summary>How is Container shipping calculated?</summary>
+                <div class="faq-body">
+                  Container shipping depends on the weight-to-volume ratio (density).<br/>
+                  — If density is <strong>less than 167 kg/m³</strong>: calculated as <strong>$550</strong> per 1 CBM (cubic meter).<br/>
+                  — If density is <strong>higher</strong>: rate per kg ($3.5 – $2.0) applies depending on density.
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+
+
+        <section>
+          <div class="caps" style="margin-bottom:8px">Calculation Results</div>
+          
+          <div class="breakdown">
+            
+            <div class="item"><span>Total Packages</span><strong id="outQty">—</strong></div>
+            <div class="item"><span>Total Physical Weight</span><strong id="outPhysical">—</strong></div>
+            <div class="item"><span>Total Volume (CBM)</span><strong id="outCBM">—</strong></div>
+            <div class="item"><span>Total Vol. Weight (Express)</span><strong id="outVolWeight">—</strong></div>
+            
+            <div id="expressDetails">
+                <div class="item"><span>Chargeable Weight</span><strong id="outChargeable">—</strong></div>
+                <div class="line"></div>
+                <div class="item"><span>Product Rate</span><strong id="outRate">—</strong></div>
+                <div class="item"><span>Freight $4.5 × ch. weight</span><strong id="outFreight">—</strong></div>
+                <div class="item"><span id="residualLabel">Tariff Balance × phys. weight</span><strong id="outTariffPart">—</strong></div>
+                <div class="item"><span>Admin Fee (fixed)</span><strong id="outAdmin">$ 20.00</strong></div>
+            </div>
+
+            <div id="containerDetails" class="hidden">
+                <div class="line"></div>
+                <div class="item"><span>Total Density (kg/m³)</span><strong id="outDensity">—</strong></div>
+                <div class="item"><span>Applied Rate</span><strong id="outContainerRate">—</strong></div>
+                <div class="item"><span class="muted small">Condition:</span><strong id="outCondition" class="small muted" style="font-weight:normal; text-align:right; max-width:60%">—</strong></div>
+            </div>
+
+            <div class="line"></div>
+            <div class="total">
+              <div class="muted">Total to Pay</div>
+              <div class="big" id="outTotal">—</div>
+            </div>
+          </div>
+
+          <div id="minNote" class="note" style="display:none; margin-top:12px"></div>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:14px">
+            <a id="waBtn" class="btn" href="#" target="_blank" rel="noopener">Book via WhatsApp</a>
+            <button id="copyBtn" class="btn secondary" type="button">Copy Calculation</button>
+          </div>
+
+          <div class="small muted" style="margin-top:10px">
+            Clicking WhatsApp will prepare an automated message for the manager with the total amount and details.
+          </div>
+        </section>
+      </div>
+
+      <footer>
+        <div class="line" style="margin:18px 0"></div>
+        <div style="display:grid; gap:8px">
+          <div>⚑ Notes:</div>
+          <ul id="footerNotes" class="small muted" style="margin:0; padding-left:18px; display:grid; gap:6px">
+            </ul>
+      </footer>
+    </main>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px">
+      <div class="brandmark">Al Daqiq Cargo</div>
+      <div class="copy">© <span id="year"></span> — All rights reserved</div>
+    </div>
+  </div>
+
+  <script>
+    // === DATA (Translated) ===
+
+    const TARIFFS = [
+      ["Auto Parts", 12],
+      ["Action Cameras (GoPro)", 40],
+["Adapters / Chargers / Power Supplies", 25],
+["Audio Systems (non-ELI)", 25],
+["Bags", 25],
+["Batteries", 35],
+["Boat Motors", 15],
+["Boat/Ship Parts", 12],
+["Books", 15],
+["Camera & Video Equipment (non-ELI)", 25],
+["Camera Glasses (ELI)", 40],
+["Clothes", 20],
+["Concert Equipment", 30],
+["Cosmetics (non-DG)", 35],
+["Crypto Wallets & Flash Drives", 40],
+["Displays for Phones", 25],
+["Engines (incl. used)", 18],
+["Exposure Meters (Light Meters)", 40],
+["Fabrics", 20],
+["Garmin Fishfinders (non-ELI)", 30],
+["Industrial Lasers", 25],
+["IT Equipment", 40],
+["Joystick & Game Consoles", 20],
+["Keyboards / Mice (non-Apple)", 25],
+["Lamps & Lighting", 18],
+["Medical Equipment", 35],
+["Memory Cards, SSD, HDD, RAM", 30],
+["Microphone Cables", 25],
+["Mini Computers (Mains powered)", 40],
+["Monitors", 20],
+["Motherboards", 25],
+["Network Equipment", 30],
+["Network Equipment (Internet)", 40],
+["Omnipods", 25],
+["Oscilloscopes", 30],
+["Parachute Equipment", 18],
+["Pens & Stationery", 25],
+["Phone Cases", 20],
+["Printers Cartridges", 16],
+["Processors (CPUs)", 40],
+["Razor Blades", 20],
+["Sewing Accessories", 18],
+["Smartwatch / Watch Parts", 40],
+["Soft Electronics", 20],
+["Special Machinery Parts", 12],
+["Sports Goods", 20],
+["Sunglasses", 25],
+["Synthetic Oils (non-DG)", 20],
+["Textile / Fabrics", 20],
+["TVs", 20],
+["Used Auto Parts", 16],
+["Vacuum Hair Dryers (Dyson, non-ELI)", 25],
+    ];
+
+    const EX_BASE = 4.5;
+    const EX_ADMIN = 20;
+    const EX_MIN_W = 30;
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => document.querySelectorAll(sel);
+    
+    const els = {
+      tabs:         $$('.tab-btn'),
+      productRow:   $('#productTypeRow'),
+      item:         $('#item'),
+      boxCount:     $('#boxCount'),
+      boxesContainer: $('#boxesContainer'),
+      
+      // Output General
+      outQty:         $('#outQty'),
+      outPhysical:    $('#outPhysical'),
+      outCBM:         $('#outCBM'),
+      outVolWeight:   $('#outVolWeight'),
+      
+      // Blocks
+      expressBlock:   $('#expressDetails'),
+      containerBlock: $('#containerDetails'),
+      
+      // Express Fields
+      outChargeable:  $('#outChargeable'),
+      outRate:        $('#outRate'),
+      outFreight:     $('#outFreight'),
+      residualLabel:  $('#residualLabel'),
+      outTariffPart:  $('#outTariffPart'),
+      outAdmin:       $('#outAdmin'),
+      
+      // Container Fields
+      outDensity:     $('#outDensity'),
+      outContainerRate:$('#outContainerRate'),
+      outCondition:   $('#outCondition'),
+
+      // General
+      outTotal:       $('#outTotal'),
+      minNote:        $('#minNote'),
+      footerNotes:    $('#footerNotes'),
+      waBtn:          $('#waBtn'),
+      copyBtn:        $('#copyBtn'),
+      resetBtn:       $('#resetBtn'),
+    };
+
+    let MODE = 'express';
+
+    // === BOX LIST MANAGEMENT ===
+
+    function createBoxRow(index) {
+        const row = document.createElement('div');
+        row.className = 'box-row';
+        row.dataset.idx = index;
+        row.innerHTML = `
+            <div class="box-num">${index}</div>
+            <input type="number" class="b-w" placeholder="Kg" min="0" step="0.1">
+            <input type="number" class="b-len" placeholder="L" min="0" step="1">
+            <input type="number" class="b-wid" placeholder="W" min="0" step="1">
+            <input type="number" class="b-hei" placeholder="H" min="0" step="1">
+        `;
+        // Add listeners immediately
+        const inputs = row.querySelectorAll('input');
+        inputs.forEach(inp => inp.addEventListener('input', recalc));
+        return row;
+    }
+
+    function updateBoxRows() {
+        const count = parseInt(els.boxCount.value) || 1;
+        const container = els.boxesContainer;
+        const currentRows = container.children;
+        const currentCount = currentRows.length;
+
+        if (count > currentCount) {
+            // Add new
+            for (let i = currentCount + 1; i <= count; i++) {
+                container.appendChild(createBoxRow(i));
+            }
+        } else if (count < currentCount) {
+            // Remove from end
+            while (container.children.length > count) {
+                container.removeChild(container.lastChild);
+            }
+        }
+        recalc();
+    }
+
+    // === INITIALIZATION ===
+
+    function initSelect(){
+      TARIFFS.forEach(([label, rate], idx) => {
+        const opt = document.createElement('option');
+        opt.value = String(idx);
+        opt.textContent = label;
+        opt.dataset.rate = rate;
+        els.item.appendChild(opt);
+      });
+    }
+
+    function switchMode(newMode) {
+      MODE = newMode;
+      els.tabs.forEach(btn => {
+        if(btn.dataset.mode === MODE) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      if (MODE === 'express') {
+        els.productRow.classList.remove('hidden');
+        els.expressBlock.classList.remove('hidden');
+        els.containerBlock.classList.add('hidden');
+        els.outVolWeight.parentElement.classList.remove('hidden'); 
+      } else {
+        els.productRow.classList.add('hidden');
+        els.expressBlock.classList.add('hidden');
+        els.containerBlock.classList.remove('hidden');
+        els.outVolWeight.parentElement.classList.add('hidden');
+      }
+
+      updateNotes();
+      recalc();
+    }
+
+    function updateNotes() {
+        if (MODE === 'express') {
+            els.footerNotes.innerHTML = `
+            <li>Calculation: <strong>$4.5</strong> × (Volumetric or Physical weight — whichever is higher) + <strong>(Rate − 4.5)</strong> × Physical weight + <strong>$20</strong> Admin fee.</li>
+            <li>Minimum weight for separate shipping — <strong>30 kg</strong>.</li>
+            <li>Results are indicative and subject to final confirmation.</li>`;
+        } else {
+            els.footerNotes.innerHTML = `
+            <li>Container calculation depends on the <strong>total density</strong> (kg/m³).</li>
+            <li>Density < 167 kg/m³: charged at <strong>$550</strong> per 1 CBM.</li>
+            <li>Density > 167 kg/m³: rate per kg ($3.5, $3.1, $2.6). Rates $2.2 and $2.0 require weight over <strong>2000 kg</strong>.</li>
+            <li>Results are indicative and subject to final confirmation.</li>`;
+        }
+    }
+
+    // === CALCULATIONS ===
+
+    function sanitize(n){
+      const v = Number(n);
+      return isFinite(v) && v >= 0 ? v : 0;
+    }
+
+    function formatUSD(v) {
+        return isFinite(v) ? `$ ${v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}` : "—";
+    }
+
+    function getAggregatedData() {
+        let totalW = 0;
+        let totalVol = 0; // m3
+        let totalVolW = 0; // kg for express
+        
+        const rows = els.boxesContainer.querySelectorAll('.box-row');
+        rows.forEach(row => {
+            const w = sanitize(row.querySelector('.b-w').value);
+            const l = sanitize(row.querySelector('.b-len').value);
+            const wd= sanitize(row.querySelector('.b-wid').value);
+            const h = sanitize(row.querySelector('.b-hei').value);
+            
+            totalW += w;
+            const cm3 = l * wd * h;
+            if(cm3 > 0) {
+                totalVol += cm3 / 1000000;
+                totalVolW += cm3 / 6000;
+            }
+        });
+        
+        return { totalW, totalVol, totalVolW, count: rows.length };
+    }
+
+    function getContainerPrice(weight, cbm) {
+        if (cbm <= 0.0001) return { total: 0, rateText: "—", density: 0, condition: "Please enter dimensions" };
+
+        const density = weight / cbm;
+        let rateVal = 0;
+        let total = 0;
+        let rateText = "";
+        let condition = "";
+
+        if (density < 167) {
+            rateVal = 550; 
+            total = cbm * rateVal;
+            rateText = "$ 550.00 / CBM";
+            condition = "Volumetric cargo (< 167 kg/m³)";
+        } else {
+            if (density <= 200) {
+                rateVal = 3.5; condition = "Density 167–200";
+            } else if (density <= 300) {
+                rateVal = 3.1; condition = "Density 201–300";
+            } else if (density <= 400) {
+                rateVal = 2.6; condition = "Density 301–400";
+            } else if (density <= 500) {
+                if (weight > 2000) { rateVal = 2.2; condition = "Density 401–500 (> 2t)"; }
+                else { rateVal = 2.6; condition = "Density 401–500 (weight < 2t → 2.6)"; }
+            } else {
+                if (weight > 2000) { rateVal = 2.0; condition = "Density 501+ (> 2t)"; }
+                else { rateVal = 2.6; condition = "Density 501+ (weight < 2t → 2.6)"; }
+            }
+            rateText = `$ ${rateVal.toFixed(2)} / kg`;
+            total = weight * rateVal;
+        }
+        return { total, rateText, density, condition };
+    }
+
+    function recalc(){
+      const data = getAggregatedData();
+      const W = data.totalW;
+      
+      els.outQty.textContent = data.count;
+      els.outPhysical.textContent = W > 0 ? `${W.toFixed(2)} kg` : "—";
+      els.outCBM.textContent = data.totalVol > 0 ? `${data.totalVol.toFixed(3)} m³` : "—";
+      
+      let finalTotal = 0;
+      let isValid = false;
+
+      // === EXPRESS ===
+      if (MODE === 'express') {
+        els.outVolWeight.textContent = data.totalVolW > 0 ? `${data.totalVolW.toFixed(2)} kg` : "—";
+        
+        const rate = Number(els.item.options[els.item.selectedIndex]?.dataset?.rate || 0);
+        const chargeable = Math.max(W, data.totalVolW);
+        
+        const freight = EX_BASE * chargeable;
+        const tariffPart = Math.max(rate - EX_BASE, 0) * W; 
+        finalTotal = freight + tariffPart + EX_ADMIN;
+        
+        els.outChargeable.textContent = chargeable > 0 ? `${chargeable.toFixed(2)} kg` : "—";
+        els.outRate.textContent = rate ? `$ ${rate.toFixed(2)} / kg` : "—";
+        els.outFreight.textContent = formatUSD(freight);
+        els.residualLabel.textContent = `Tariff Balance ($${Math.max(rate - EX_BASE, 0).toFixed(2)}) × Phys. Weight`;
+        els.outTariffPart.textContent = formatUSD(tariffPart);
+
+        if (W>0 && W < EX_MIN_W) {
+            const soloFreight = EX_BASE * Math.max(data.totalVolW, EX_MIN_W);
+            const soloTariff  = Math.max(rate - EX_BASE, 0) * Math.max(W, EX_MIN_W);
+            const soloTotal   = soloFreight + soloTariff + EX_ADMIN;
+            els.minNote.style.display = 'block';
+            els.minNote.innerHTML = `Total weight < ${EX_MIN_W} kg. Minimum weight applies for separate shipping.<br>Approximate cost: <strong>${formatUSD(soloTotal)}</strong>`;
+        } else {
+            els.minNote.style.display = 'none';
+        }
+        isValid = (rate > 0 && W > 0 && isFinite(finalTotal));
+      } 
+      
+      // === CONTAINER ===
+      else {
+        const res = getContainerPrice(W, data.totalVol);
+        finalTotal = res.total;
+        
+        els.outDensity.textContent = (res.density > 0) ? `${res.density.toFixed(1)} kg/m³` : "—";
+        els.outContainerRate.textContent = res.rateText;
+        els.outCondition.textContent = res.condition;
+        
+        els.minNote.style.display = 'none';
+        isValid = (W > 0 && data.totalVol > 0 && isFinite(finalTotal));
+      }
+
+      els.outTotal.textContent = formatUSD(isValid ? finalTotal : NaN);
+      if (isValid) {
+        els.outTotal.classList.add('highlight');
+        setTimeout(() => els.outTotal.classList.remove('highlight'), 300);
+      }
+
+      updateButtons(isValid, finalTotal, data);
+    }
+
+    function updateButtons(isValid, total, data) {
+        let msg = "";
+        const dimStr = `${data.count} package(s), total volume ${data.totalVol.toFixed(3)} m³`;
+        
+        if (MODE === 'express') {
+            const label = els.item.options[els.item.selectedIndex]?.textContent || '';
+            msg = `Hello! Express inquiry. Product: ${label}. Weight: ${data.totalW} kg. ${dimStr}. Calculator result: $${total.toFixed(2)}.`;
+        } else {
+            msg = `Hello! Container inquiry. Weight: ${data.totalW} kg. ${dimStr}. Calculator result: $${total.toFixed(2)}.`;
+        }
+        els.waBtn.href = `https://wa.me/971509543811?text=${encodeURIComponent(msg)}`;
+
+        const disabled = !isValid;
+        els.waBtn.style.pointerEvents = disabled ? 'none' : 'auto';
+        els.waBtn.style.opacity = disabled ? .6 : 1;
+        els.copyBtn.disabled = disabled;
+        els.copyBtn.style.opacity = disabled ? .6 : 1;
+    }
+
+    function copyBreakdown(){
+      const totalText = els.outTotal.textContent;
+      const data = getAggregatedData();
+      let text = `Al Daqiq Cargo (${MODE === 'express' ? 'Express' : 'Container'})\n`;
+      text += `Packages: ${data.count}\n`;
+      text += `Weight: ${data.totalW.toFixed(2)} kg\n`;
+      text += `Volume: ${data.totalVol.toFixed(3)} m³\n`;
+      
+      if(MODE === 'express'){
+          text += `Product: ${els.item.options[els.item.selectedIndex].textContent}\n`;
+      } else {
+          text += `Density: ${els.outDensity.textContent}\n`;
+          text += `Rate: ${els.outContainerRate.textContent}\n`;
+      }
+      text += `TOTAL: ${totalText}`;
+      
+      navigator.clipboard.writeText(text).then(()=>{
+        els.copyBtn.textContent = 'Copied!';
+        setTimeout(()=> els.copyBtn.textContent = 'Copy Calculation', 1400);
+      });
+    }
+
+    function resetForm(){
+      els.item.selectedIndex = 0;
+      els.boxCount.value = 1;
+      updateBoxRows();
+      // Clear first row
+      const firstRow = els.boxesContainer.firstElementChild;
+      if(firstRow) {
+          firstRow.querySelectorAll('input').forEach(inp => inp.value = '');
+      }
+      recalc();
+    }
+
+    // Listeners
+    els.tabs.forEach(btn => btn.addEventListener('click', e => switchMode(e.target.dataset.mode)));
+    els.item.addEventListener('change', recalc);
+    els.boxCount.addEventListener('change', updateBoxRows);
+    els.boxCount.addEventListener('keyup', updateBoxRows); 
+    els.copyBtn.addEventListener('click', copyBreakdown);
+    els.resetBtn.addEventListener('click', resetForm);
+    document.getElementById('year').textContent = new Date().getFullYear();
+    
+    // Start
+    initSelect();
+    updateBoxRows(); 
+    switchMode('express');
+  </script>
+</body>
+</html>
