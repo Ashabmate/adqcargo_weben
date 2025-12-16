@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Al Daqiq Cargo — Multi-Calculator</title>
-  <meta name="description" content="Al Daqiq Cargo Calculator: Express and Container shipping with multi-piece calculation." />
+  <meta name="description" content="Al Daqiq Cargo Calculator: Express and Container shipping with multi-item calculation." />
   <style>
     :root{
       --bg:#0f172a;            /* slate-900 */
@@ -53,13 +53,21 @@
       border:1px solid var(--ring); outline:none; transition:border-color .2s, box-shadow .2s;
     }
     select:focus, input:focus{ border-color: var(--accent); box-shadow:0 0 0 3px rgba(34,197,94,.15); }
+    /* Styles for disabled inputs */
+    input:disabled {
+        background: rgba(255,255,255,0.05);
+        color: var(--muted);
+        border-color: transparent;
+        cursor: not-allowed;
+    }
+
     .row-2{display:grid; grid-template-columns:repeat(2, 1fr); gap:12px}
 
     .muted{color:var(--muted)}
     .small{font-size:12px}
     .hint{font-size:12px; color:var(--muted)}
 
-    /* Tabs */
+    /* Tab Styles */
     .tabs {
       display: flex;
       background: #0b1224;
@@ -90,46 +98,68 @@
       color: var(--text);
     }
 
-    /* Box Rows */
+    /* Dynamic Box Row Styles */
     .box-list {
         display: grid;
         gap: 10px;
         margin-top: 10px;
     }
-    .box-row {
+    
+    /* Updated Grid: Added columns for checkbox and volume */
+    .box-grid-template {
         display: grid;
-        grid-template-columns: 30px 1.5fr 1fr 1fr 1fr;
-        gap: 8px;
+        /* # | Weight | L | W | H | Check | Volume */
+        grid-template-columns: 25px 1.2fr 0.9fr 0.9fr 0.9fr 30px 1.1fr;
+        gap: 6px;
         align-items: center;
+    }
+
+    .box-row {
         background: rgba(255,255,255,0.03);
         padding: 8px;
         border-radius: 10px;
         border: 1px solid rgba(255,255,255,0.05);
     }
+    
     .box-num {
         font-size: 12px;
         color: var(--muted);
         text-align: center;
         font-weight: bold;
     }
+    
     .box-header-row {
-        display: grid;
-        grid-template-columns: 30px 1.5fr 1fr 1fr 1fr;
-        gap: 8px;
         padding: 0 8px;
         margin-bottom: 4px;
     }
     .box-header-col {
-        font-size: 11px;
+        font-size: 10px;
         color: var(--muted);
         text-transform: uppercase;
+        text-align: center;
+        white-space: nowrap;
     }
-    .box-row input {
-        padding: 8px;
+    .box-row input[type="number"] {
+        padding: 8px 4px;
         font-size: 13px;
+        text-align: center;
+    }
+    
+    /* Custom Checkbox for Volume Mode */
+    .vol-check-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+    }
+    .vol-check {
+        cursor: pointer;
+        width: 16px; 
+        height: 16px;
+        accent-color: var(--accent);
     }
 
-    /* Breakdown/Total */
+    /* Summary Block */
     .breakdown{background:#0b1224; border:1px dashed var(--ring); border-radius:14px; padding:14px}
     .breakdown .item{display:flex; justify-content:space-between; align-items:center; padding:6px 2px; font-size:14px}
     .breakdown .item strong{font-weight:600}
@@ -180,7 +210,6 @@
     
     details.accordion{background:#0b1224; border:1px solid var(--ring); border-radius:12px; padding:10px 12px; transition: border-color .2s, box-shadow .2s;}
     details.accordion summary{cursor:pointer; list-style:none; font-weight:600; color:var(--text)}
-    details.accordion summary::-webkit-details-marker{display:none}
     details.accordion summary::after{content:'+'; float:right; color:var(--muted)}
     details.accordion[open] summary::after{content:'–'}
     details.accordion[open]{border-color:var(--accent); box-shadow:0 0 0 3px rgba(34,197,94,.08)}
@@ -216,11 +245,11 @@
       <div class="brand">
         <img src="logo.png" alt="Al Daqiq Cargo" class="logo" onerror="this.style.display='none'">
         <div>
-          <h1>Al Daqiq Cargo — Multi-Calculator</h1>
-          <div class="tag">Estimate shipping cost and book your charter slot</div>
+          <h1>Al Daqiq Cargo — Calculator</h1>
+          <div class="tag">Estimate shipping cost and book your slot</div>
         </div>
       </div>
-      <div class="kicker"><span class="caps">UAE</span> • rates in USD • preliminary calculation</div>
+      <div class="kicker"><span class="caps">UAE</span> • Rates in USD • Preliminary Calculation</div>
     </header>
 
     <main class="card">
@@ -246,17 +275,19 @@
             </div>
 
             <div style="margin-bottom:12px">
-                 <label for="boxCount">Number of packages (boxes / pallets)</label>
+                 <label for="boxCount">Number of Pieces (Boxes / Pallets)</label>
                  <input id="boxCount" type="number" min="1" step="1" value="1">
             </div>
 
             <div>
-                <div class="box-header-row">
+                <div class="box-header-row box-grid-template">
                     <div>#</div>
                     <div class="box-header-col">Weight (kg)</div>
                     <div class="box-header-col">L (cm)</div>
                     <div class="box-header-col">W (cm)</div>
                     <div class="box-header-col">H (cm)</div>
+                    <div class="box-header-col" title="Enter volume manually">Man.</div>
+                    <div class="box-header-col">Volume (m³)</div>
                 </div>
                 <div id="boxesContainer" class="box-list">
                     </div>
@@ -265,18 +296,24 @@
           </div>
           
           <div class="widget">
-            <span class="widget-title">FAQ</span>
+            <span class="widget-title">Frequently Asked Questions</span>
             <div class="faq" style="margin-top:0"> 
               <details class="accordion">
-                <summary>What is Express?</summary>
-                <div class="faq-body">Express line is a direct flight. Transit time 2–3 days. The rate depends on the type of goods. It is calculated based on the chargeable weight (the greater of volumetric vs. physical weight).</div>
+                <summary>How to enter volume manually?</summary>
+                <div class="faq-body">
+                    Check the box in the <strong>"Man."</strong> column. The Length, Width, and Height fields will be disabled, and you can enter the exact volume in m³ manually.
+                </div>
               </details>
               <details class="accordion" style="margin-top:8px">
-                <summary>How is Container shipping calculated?</summary>
+                <summary>What is Express?</summary>
+                <div class="faq-body">The Express line is a direct air freight. Transit time is 2–3 days. The rate depends on the commodity. Charged based on the greater of the two weights (Volumetric vs. Gross).</div>
+              </details>
+              <details class="accordion" style="margin-top:8px">
+                <summary>How is Container calculated?</summary>
                 <div class="faq-body">
-                  Container shipping depends on the weight-to-volume ratio (density).<br/>
-                  — If density is <strong>less than 167 kg/m³</strong>: calculated as <strong>$550</strong> per 1 CBM (cubic meter).<br/>
-                  — If density is <strong>higher</strong>: rate per kg ($3.5 – $2.0) applies depending on density.
+                  For container shipping, the weight-to-volume ratio (density) is critical.<br/>
+                  — If density is <strong>less than 167 kg/m³</strong>: calculated at $550 per 1 CBM (cubic meter).<br/>
+                  — If density is <strong>higher</strong>: rate per kg ($3.5 – $2.0) depending on cargo density.
                 </div>
               </details>
             </div>
@@ -285,22 +322,22 @@
 
 
         <section>
-          <div class="caps" style="margin-bottom:8px">Calculation Results</div>
+          <div class="caps" style="margin-bottom:8px">Calculation Summary</div>
           
           <div class="breakdown">
             
-            <div class="item"><span>Total Packages</span><strong id="outQty">—</strong></div>
-            <div class="item"><span>Total Physical Weight</span><strong id="outPhysical">—</strong></div>
+            <div class="item"><span>Total Pieces</span><strong id="outQty">—</strong></div>
+            <div class="item"><span>Total Gross Weight</span><strong id="outPhysical">—</strong></div>
             <div class="item"><span>Total Volume (CBM)</span><strong id="outCBM">—</strong></div>
-            <div class="item"><span>Total Vol. Weight (Express)</span><strong id="outVolWeight">—</strong></div>
+            <div class="item"><span>Total Volumetric Weight (Express)</span><strong id="outVolWeight">—</strong></div>
             
             <div id="expressDetails">
-                <div class="item"><span>Chargeable Weight</span><strong id="outChargeable">—</strong></div>
+                <div class="item"><span>Chargeable Weight for Freight</span><strong id="outChargeable">—</strong></div>
                 <div class="line"></div>
-                <div class="item"><span>Product Rate</span><strong id="outRate">—</strong></div>
-                <div class="item"><span>Freight $4.5 × ch. weight</span><strong id="outFreight">—</strong></div>
-                <div class="item"><span id="residualLabel">Tariff Balance × phys. weight</span><strong id="outTariffPart">—</strong></div>
-                <div class="item"><span>Admin Fee (fixed)</span><strong id="outAdmin">$ 20.00</strong></div>
+                <div class="item"><span>Product Tariff</span><strong id="outRate">—</strong></div>
+                <div class="item"><span>Freight $4.5 × Chargeable Weight</span><strong id="outFreight">—</strong></div>
+                <div class="item"><span id="residualLabel">Residual Tariff × Gross Weight</span><strong id="outTariffPart">—</strong></div>
+                <div class="item"><span>Admin Fee (Fixed)</span><strong id="outAdmin">$ 20.00</strong></div>
             </div>
 
             <div id="containerDetails" class="hidden">
@@ -312,7 +349,7 @@
 
             <div class="line"></div>
             <div class="total">
-              <div class="muted">Total to Pay</div>
+              <div class="muted">Total Payable</div>
               <div class="big" id="outTotal">—</div>
             </div>
           </div>
@@ -320,12 +357,12 @@
           <div id="minNote" class="note" style="display:none; margin-top:12px"></div>
 
           <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:14px">
-            <a id="waBtn" class="btn" href="#" target="_blank" rel="noopener">Book via WhatsApp</a>
+            <a id="waBtn" class="btn" href="#" target="_blank" rel="noopener">Contact on WhatsApp and Book</a>
             <button id="copyBtn" class="btn secondary" type="button">Copy Calculation</button>
           </div>
 
           <div class="small muted" style="margin-top:10px">
-            Clicking WhatsApp will prepare an automated message for the manager with the total amount and details.
+            By clicking on WhatsApp, you will send the manager an auto-message with the final amount and details.
           </div>
         </section>
       </div>
@@ -341,71 +378,35 @@
 
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px">
       <div class="brandmark">Al Daqiq Cargo</div>
-      <div class="copy">© <span id="year"></span> — All rights reserved</div>
+      <div class="copy">© <span id="year"></span> — All Rights Reserved</div>
     </div>
   </div>
 
   <script>
-    // === DATA (Translated) ===
+    // === DATA ===
 
     const TARIFFS = [
-      ["Auto Parts", 12],
-      ["Action Cameras (GoPro)", 40],
-["Adapters / Chargers / Power Supplies", 25],
-["Audio Systems (non-ELI)", 25],
-["Bags", 25],
-["Batteries", 35],
-["Boat Motors", 15],
-["Boat/Ship Parts", 12],
-["Books", 15],
-["Camera & Video Equipment (non-ELI)", 25],
-["Camera Glasses (ELI)", 40],
-["Clothes", 20],
-["Concert Equipment", 30],
-["Cosmetics (non-DG)", 35],
-["Crypto Wallets & Flash Drives", 40],
-["Displays for Phones", 25],
-["Engines (incl. used)", 18],
-["Exposure Meters (Light Meters)", 40],
-["Fabrics", 20],
-["Garmin Fishfinders (non-ELI)", 30],
-["Industrial Lasers", 25],
-["IT Equipment", 40],
-["Joystick & Game Consoles", 20],
-["Keyboards / Mice (non-Apple)", 25],
-["Lamps & Lighting", 18],
-["Medical Equipment", 35],
-["Memory Cards, SSD, HDD, RAM", 30],
-["Microphone Cables", 25],
-["Mini Computers (Mains powered)", 40],
-["Monitors", 20],
-["Motherboards", 25],
-["Network Equipment", 30],
-["Network Equipment (Internet)", 40],
-["Omnipods", 25],
-["Oscilloscopes", 30],
-["Parachute Equipment", 18],
-["Pens & Stationery", 25],
-["Phone Cases", 20],
-["Printers Cartridges", 16],
-["Processors (CPUs)", 40],
-["Razor Blades", 20],
-["Sewing Accessories", 18],
-["Smartwatch / Watch Parts", 40],
-["Soft Electronics", 20],
-["Special Machinery Parts", 12],
-["Sports Goods", 20],
-["Sunglasses", 25],
-["Synthetic Oils (non-DG)", 20],
-["Textile / Fabrics", 20],
-["TVs", 20],
-["Used Auto Parts", 16],
-["Vacuum Hair Dryers (Dyson, non-ELI)", 25],
+      ["Auto Parts", 12], ["Batteries", 35], ["Audio Systems (not ELI)", 25], ["Power Supply", 25], ["Used Auto Parts", 16],
+      ["Garmin Fishfinders (not ELI)", 30], ["Dyson Hair Dryers (not ELI)", 25], ["Complete Engines (incl. used)", 18],
+      ["Phone Displays", 25], ["Watch Parts", 40], ["Boat and Ship Parts", 12],
+      ["Heavy Machinery Parts", 12], ["Game Discs", 20], ["Internet Networking Equipment", 40],
+      ["IT Equipment", 40], ["Camera and Video Equipment (not ELI)", 25], ["Printer Cartridges", 16],
+      ["Memory Cards SSD, HDD, RAM", 30], ["Keyboard, Mouse (not Apple)", 25], ["Books", 15],
+      ["Concert Equipment", 30], ["Cosmetics (not DG)", 35], ["Crypto Wallets and Flash Drives", 40], ["Lamps and Luminaires", 18],
+      ["Industrial Lasers", 25], ["Razor Blades", 20], ["Boat Motors", 15], ["Motherboard", 25],
+      ["Medical Equipment", 35], ["Mini-PCs (Mains Powered)", 40], ["Microphone Cable", 25],
+      ["Monitors", 20], ["Lenses", 40], ["Disposable Cameras", 22], ["Clothing", 20],
+      ["Oscilloscope", 30], ["Omnipods", 25], ["Glasses with Cameras (ELI)", 40], ["Parachute Equipment", 18], ["Consoles and Gamepads", 20],["Processors", 40],
+      ["Empty Watch Boxes", 20], ["Pens and Stationery", 25], ["Networking Equipment", 30],
+      ["Synthetic Oils (not DG)", 20], ["Sunglasses", 25], ["Sports Goods", 20],
+      ["Bags", 25], ["Fabrics", 20], ["Televisions", 20], ["Smartphone Cases", 20], ["Sewing Accessories", 18],
+      ["Light Meter (Exposure Meter)", 40], ["Action Cameras (GoPro)", 40], ["Electronics", 20],
     ];
 
     const EX_BASE = 4.5;
     const EX_ADMIN = 20;
     const EX_MIN_W = 30;
+    const DIM_DIVISOR = 6000; // for express volumetric weight from cm
 
     const $ = sel => document.querySelector(sel);
     const $$ = sel => document.querySelectorAll(sel);
@@ -417,7 +418,7 @@
       boxCount:     $('#boxCount'),
       boxesContainer: $('#boxesContainer'),
       
-      // Output General
+      // General Outputs
       outQty:         $('#outQty'),
       outPhysical:    $('#outPhysical'),
       outCBM:         $('#outCBM'),
@@ -440,7 +441,7 @@
       outContainerRate:$('#outContainerRate'),
       outCondition:   $('#outCondition'),
 
-      // General
+      // Overall
       outTotal:       $('#outTotal'),
       minNote:        $('#minNote'),
       footerNotes:    $('#footerNotes'),
@@ -455,19 +456,81 @@
 
     function createBoxRow(index) {
         const row = document.createElement('div');
-        row.className = 'box-row';
+        row.className = 'box-row box-grid-template';
         row.dataset.idx = index;
+        
+        // Create HTML structure
         row.innerHTML = `
             <div class="box-num">${index}</div>
-            <input type="number" class="b-w" placeholder="Kg" min="0" step="0.1">
-            <input type="number" class="b-len" placeholder="L" min="0" step="1">
-            <input type="number" class="b-wid" placeholder="W" min="0" step="1">
-            <input type="number" class="b-hei" placeholder="H" min="0" step="1">
+            <input type="number" class="b-w" placeholder="Weight" min="0" step="0.1">
+            <input type="number" class="b-len dim" placeholder="L" min="0" step="1">
+            <input type="number" class="b-wid dim" placeholder="W" min="0" step="1">
+            <input type="number" class="b-hei dim" placeholder="H" min="0" step="1">
+            <div class="vol-check-wrap" title="Enter volume manually">
+                <input type="checkbox" class="vol-check">
+            </div>
+            <input type="number" class="b-vol" placeholder="m³" min="0" step="0.001" disabled>
         `;
-        // Add listeners immediately
-        const inputs = row.querySelectorAll('input');
-        inputs.forEach(inp => inp.addEventListener('input', recalc));
+
+        // Event Listeners for this row
+        const wInp = row.querySelector('.b-w');
+        const dims = row.querySelectorAll('.dim');
+        const check = row.querySelector('.vol-check');
+        const volInp = row.querySelector('.b-vol');
+
+        // Recalculate on weight input
+        wInp.addEventListener('input', recalc);
+
+        // Recalculate on dimension input
+        dims.forEach(inp => {
+            inp.addEventListener('input', () => {
+                if(!check.checked) {
+                    calcRowVolumeFromDims(row);
+                }
+                recalc();
+            });
+        });
+
+        // Recalculate on manual volume input
+        volInp.addEventListener('input', recalc);
+
+        // Mode Switching (Checkbox)
+        check.addEventListener('change', () => {
+            const isManual = check.checked;
+            
+            // Toggle availability
+            dims.forEach(d => d.disabled = isManual);
+            volInp.disabled = !isManual;
+
+            if (isManual) {
+                // If manual mode enabled, focus on volume
+                volInp.focus();
+            } else {
+                // If manual mode disabled, recalculate volume from dimensions (even if empty -> 0)
+                calcRowVolumeFromDims(row);
+            }
+            recalc();
+        });
+
         return row;
+    }
+
+    // Helper: Calculates volume from LWH fields and writes to volume field
+    function calcRowVolumeFromDims(row) {
+        const l = parseFloat(row.querySelector('.b-len').value) || 0;
+        const w = parseFloat(row.querySelector('.b-wid').value) || 0;
+        const h = parseFloat(row.querySelector('.b-hei').value) || 0;
+        const volInp = row.querySelector('.b-vol');
+
+        const cm3 = l * w * h;
+        const m3 = cm3 / 1000000;
+        
+        // If dimensions exist, write the result. If zeros - clear the field for display clarity
+        if (m3 > 0) {
+            volInp.value = Number(m3.toFixed(3)); // rounding for display
+        } else {
+            volInp.value = '';
+        }
     }
 
     function updateBoxRows() {
@@ -477,12 +540,12 @@
         const currentCount = currentRows.length;
 
         if (count > currentCount) {
-            // Add new
+            // Add new rows
             for (let i = currentCount + 1; i <= count; i++) {
                 container.appendChild(createBoxRow(i));
             }
         } else if (count < currentCount) {
-            // Remove from end
+            // Remove extra rows from the end
             while (container.children.length > count) {
                 container.removeChild(container.lastChild);
             }
@@ -528,15 +591,16 @@
     function updateNotes() {
         if (MODE === 'express') {
             els.footerNotes.innerHTML = `
-            <li>Calculation: <strong>$4.5</strong> × (Volumetric or Physical weight — whichever is higher) + <strong>(Rate − 4.5)</strong> × Physical weight + <strong>$20</strong> Admin fee.</li>
-            <li>Minimum weight for separate shipping — <strong>30 kg</strong>.</li>
-            <li>Results are indicative and subject to final confirmation.</li>`;
+            <li>Calculation: <strong>$4.5</strong> × (Volumetric Weight or Gross Weight — whichever is greater) + <strong>(Tariff − 4.5)</strong> × Gross Weight + <strong>$20</strong> Admin Fee.</li>
+            <li>Minimum weight for a separate shipment is <strong>30 kg</strong>.</li>
+            <li>The results are approximate.</li>`;
         } else {
             els.footerNotes.innerHTML = `
-            <li>Container calculation depends on the <strong>total density</strong> (kg/m³).</li>
-            <li>Density < 167 kg/m³: charged at <strong>$550</strong> per 1 CBM.</li>
-            <li>Density > 167 kg/m³: rate per kg ($3.5, $3.1, $2.6). Rates $2.2 and $2.0 require weight over <strong>2000 kg</strong>.</li>
-            <li>Results are indicative and subject to final confirmation.</li>`;
+            <li>Container rate calculation is available <strong>only for auto parts</strong>. For other cargo types, please contact the manager on WhatsApp. </li>
+            <li>Container calculation depends on the <strong>Total Cargo Density</strong> (kg/m³).</li>
+            <li>Density < 167 kg/m³: calculated as <strong>$550</strong> per 1 CBM (cubic meter).</li>
+            <li>Density > 167 kg/m³: rate per kg of weight ($3.5, $3.1, $2.6). For $2.2 and $2.0 rates, the weight must exceed <strong>2000 kg</strong>.</li>
+            <li>The results are approximate.</li>`;
         }
     }
 
@@ -559,15 +623,30 @@
         const rows = els.boxesContainer.querySelectorAll('.box-row');
         rows.forEach(row => {
             const w = sanitize(row.querySelector('.b-w').value);
-            const l = sanitize(row.querySelector('.b-len').value);
-            const wd= sanitize(row.querySelector('.b-wid').value);
-            const h = sanitize(row.querySelector('.b-hei').value);
-            
             totalW += w;
-            const cm3 = l * wd * h;
-            if(cm3 > 0) {
-                totalVol += cm3 / 1000000;
-                totalVolW += cm3 / 6000;
+
+            // Logic to get row volume
+            const check = row.querySelector('.vol-check');
+            const volInp = row.querySelector('.b-vol');
+            
+            let rowM3 = 0;
+
+            if (check.checked) {
+                // Manual mode: take figure from volume input
+                rowM3 = sanitize(volInp.value);
+            } else {
+                // Auto mode: calculate from dimensions (for accuracy, not from rounded field)
+                const l = sanitize(row.querySelector('.b-len').value);
+                const wd= sanitize(row.querySelector('.b-wid').value);
+                const h = sanitize(row.querySelector('.b-hei').value);
+                rowM3 = (l * wd * h) / 1000000;
+            }
+
+            if(rowM3 > 0) {
+                totalVol += rowM3;
+                // For Express: 1 CBM = 166.666 kg (or Vol / 0.006)
+                // Formula (cm * cm * cm) / 6000 is equivalent to (m3 * 1000000) / 6000 = m3 * 166.6666
+                totalVolW += rowM3 * (1000000 / DIM_DIVISOR);
             }
         });
         
@@ -575,7 +654,7 @@
     }
 
     function getContainerPrice(weight, cbm) {
-        if (cbm <= 0.0001) return { total: 0, rateText: "—", density: 0, condition: "Please enter dimensions" };
+        if (cbm <= 0.0001) return { total: 0, rateText: "—", density: 0, condition: "Enter dimensions or volume" };
 
         const density = weight / cbm;
         let rateVal = 0;
@@ -587,7 +666,7 @@
             rateVal = 550; 
             total = cbm * rateVal;
             rateText = "$ 550.00 / CBM";
-            condition = "Volumetric cargo (< 167 kg/m³)";
+            condition = "Volumetric Cargo (< 167 kg/m³)";
         } else {
             if (density <= 200) {
                 rateVal = 3.5; condition = "Density 167–200";
@@ -633,7 +712,7 @@
         els.outChargeable.textContent = chargeable > 0 ? `${chargeable.toFixed(2)} kg` : "—";
         els.outRate.textContent = rate ? `$ ${rate.toFixed(2)} / kg` : "—";
         els.outFreight.textContent = formatUSD(freight);
-        els.residualLabel.textContent = `Tariff Balance ($${Math.max(rate - EX_BASE, 0).toFixed(2)}) × Phys. Weight`;
+        els.residualLabel.textContent = `Residual Tariff ($${Math.max(rate - EX_BASE, 0).toFixed(2)}) × Gross Weight`;
         els.outTariffPart.textContent = formatUSD(tariffPart);
 
         if (W>0 && W < EX_MIN_W) {
@@ -641,7 +720,7 @@
             const soloTariff  = Math.max(rate - EX_BASE, 0) * Math.max(W, EX_MIN_W);
             const soloTotal   = soloFreight + soloTariff + EX_ADMIN;
             els.minNote.style.display = 'block';
-            els.minNote.innerHTML = `Total weight < ${EX_MIN_W} kg. Minimum weight applies for separate shipping.<br>Approximate cost: <strong>${formatUSD(soloTotal)}</strong>`;
+            els.minNote.innerHTML = `Total weight < ${EX_MIN_W} kg. Minimum charge is applied for a separate shipment.<br>Approximate: <strong>${formatUSD(soloTotal)}</strong>`;
         } else {
             els.minNote.style.display = 'none';
         }
@@ -672,13 +751,13 @@
 
     function updateButtons(isValid, total, data) {
         let msg = "";
-        const dimStr = `${data.count} package(s), total volume ${data.totalVol.toFixed(3)} m³`;
+        const dimStr = `${data.count} piece(s), total volume ${data.totalVol.toFixed(3)} m³`;
         
         if (MODE === 'express') {
             const label = els.item.options[els.item.selectedIndex]?.textContent || '';
-            msg = `Hello! Express inquiry. Product: ${label}. Weight: ${data.totalW} kg. ${dimStr}. Calculator result: $${total.toFixed(2)}.`;
+            msg = `Hello! Express. Product: ${label}. Weight: ${data.totalW} kg. ${dimStr}. Calculator: $${total.toFixed(2)}.`;
         } else {
-            msg = `Hello! Container inquiry. Weight: ${data.totalW} kg. ${dimStr}. Calculator result: $${total.toFixed(2)}.`;
+            msg = `Hello! Container. Weight: ${data.totalW} kg. ${dimStr}. Calculator: $${total.toFixed(2)}.`;
         }
         els.waBtn.href = `https://wa.me/971509543811?text=${encodeURIComponent(msg)}`;
 
@@ -693,7 +772,7 @@
       const totalText = els.outTotal.textContent;
       const data = getAggregatedData();
       let text = `Al Daqiq Cargo (${MODE === 'express' ? 'Express' : 'Container'})\n`;
-      text += `Packages: ${data.count}\n`;
+      text += `Pieces: ${data.count}\n`;
       text += `Weight: ${data.totalW.toFixed(2)} kg\n`;
       text += `Volume: ${data.totalVol.toFixed(3)} m³\n`;
       
@@ -715,26 +794,31 @@
       els.item.selectedIndex = 0;
       els.boxCount.value = 1;
       updateBoxRows();
-      // Clear first row
+      // Clear and reset the first row
       const firstRow = els.boxesContainer.firstElementChild;
       if(firstRow) {
-          firstRow.querySelectorAll('input').forEach(inp => inp.value = '');
+          firstRow.querySelectorAll('input').forEach(inp => {
+              inp.value = '';
+              inp.disabled = false;
+          });
+          firstRow.querySelector('.b-vol').disabled = true; // reset volume to disabled
+          firstRow.querySelector('.vol-check').checked = false;
       }
       recalc();
     }
 
-    // Listeners
+    // Event Listeners
     els.tabs.forEach(btn => btn.addEventListener('click', e => switchMode(e.target.dataset.mode)));
     els.item.addEventListener('change', recalc);
     els.boxCount.addEventListener('change', updateBoxRows);
-    els.boxCount.addEventListener('keyup', updateBoxRows); 
+    els.boxCount.addEventListener('keyup', updateBoxRows); // for instant reaction
     els.copyBtn.addEventListener('click', copyBreakdown);
     els.resetBtn.addEventListener('click', resetForm);
     document.getElementById('year').textContent = new Date().getFullYear();
     
     // Start
     initSelect();
-    updateBoxRows(); 
+    updateBoxRows(); // creates the first row
     switchMode('express');
   </script>
 </body>
